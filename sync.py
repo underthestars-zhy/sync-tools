@@ -103,7 +103,8 @@ if sync_:
     for to_dir_name in to_dir:
         to_dir_name += str(random.randint(0, 999)) + str(random.randint(0, 999)) + str(random.randint(0, 999))
         for from_dir_name in from_dir[i]:
-            shutil.copytree(os.path.expanduser(str(from_dir_name)), os.path.expanduser(to_dir_name))
+            to_dir_name_base = str(from_dir_name).split(os.path.sep)[-1]
+            shutil.copytree(os.path.expanduser(from_dir_name), os.path.expanduser(to_dir_name + '/' + to_dir_name_base))
         i += 1
     print(successful)
     mop_db.close()
