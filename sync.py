@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 #  Copyright (c) 2020.
 #  You can freely change the code part, but you must follow the MIT protocol
 #  You cannot delete any information about UTS
@@ -10,8 +11,11 @@ import shelve
 import os
 import random
 import shutil
+import datetime
+from typing import List
 
-
+random_list = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j',
+               'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']
 
 # 多语言设置
 file_lists = os.listdir(os.path.expanduser('~'))
@@ -20,6 +24,7 @@ if 'mop.json' in file_lists:
     mop_db_path = json.load(file)
     file.close()
     mop_db = shelve.open(mop_db_path + 'mop')
+    LANGUAGE = mop_db['language']
     if mop_db['language'] == 'en':
         sync_help = 'SYNC file'
         dir_help = 'Set the folder to sync'
@@ -31,7 +36,7 @@ if 'mop.json' in file_lists:
     else:
         sync_help = '同步文件'
         dir_help = '设置同步的文件夹'
-        dir_text = 'n: 新建, del: 删除'
+        dir_text = 'n: 新建, d: 删除, e: 修改'
         successful = '成功'
         sync_text = '开始同步...'
         sync_sync = '正在同步...'
@@ -44,67 +49,96 @@ else:
 # 命令参数设置
 parser = argparse.ArgumentParser(description='SyncTool-MacOS-11')
 
-parser.add_argument('-s', type=str, help=sync_help, nargs='?')
-parser.add_argument('-dir', type=str, help=dir_help, nargs='?')
+parser.add_argument('-s', type=str, help=sync_help, nargs='*')
+parser.add_argument('-dir', type=str, help=dir_help, nargs='*')
 
 args = parser.parse_args()
-sync_ = False
-dir = False
-
-try:
-    if sys.argv[1] == '-s':
-        sync_ = True
-except:
-    pass
 
 
-try:
-    if sys.argv[1] == '-dir':
-        dir = True
-except:
-    pass
-
-
-if dir:
+if args.s:
     print(dir_text)
-    mop_db = shelve.open(mop_db_path + 'mop')
-    from_to_dict = dict(mop_db['sync_dir_set'])
-    i = 1
-    for id_, dir_list in from_to_dict.items():
-        print('%d) %s ----> %s' %(id_, dir_list[0], dir_list[1]))
-        i += 1
-    command = input()
-    if command == 'n':
-        from_dir = input('From: ')
-        to_dir = input('To: ')
-        dir_dict = dict(mop_db['sync_dir_set'])
-        dir_dict[i] = [from_dir, to_dir]
-        mop_db['sync_dir_set'] = dir_dict
-        print(successful)
-    elif command == 'del':
-        del_id = input('ID: ')
-        dir_dict = dict(mop_db['sync_dir_set'])
-        del dir_dict[int(del_id)]
-        mop_db['sync_dir_set'] = dir_dict
-        print(successful)
-    mop_db.close()
+    # TODO: 多线程
 
-if sync_:
-    print(sync_text)
-    mop_db = shelve.open(mop_db_path + 'mop')
-    from_to_dict = dict(mop_db['sync_dir_set'])
-    from_dir = []
-    to_dir = []
-    i = 0
-    for dir_list in from_to_dict.values():
-        from_dir.append(str(dir_list[0]).split('&&'))
-        to_dir.append(dir_list[1])
-    print(sync_sync)
-    for to_dir_name in to_dir:
-        to_dir_name += str(random.randint(0, 999)) + str(random.randint(0, 999)) + str(random.randint(0, 999))
-        for from_dir_name in from_dir[i]:
-            to_dir_name_base = str(from_dir_name).split(os.path.sep)[-1]
-            shutil.copytree(os.path.expanduser(from_dir_name), os.path.expanduser(to_dir_name + '/' + to_dir_name_base))
-        i += 1
+    if args.s[0] == 'all':
+        for [from_dir_list, to_dir] in dict(mop_db['sync_dir_set']).values():
+            to_dir_path = to_dir + random.choice(random_list) + random.choice(random_list) + random.choice(random_list)\
+                          + random.choice(random_list) + random.choice(random_list) + random.choice(random_list)\
+                          + random.choice(random_list) + random.choice(random_list) + random.choice(random_list)\
+                          + random.choice(random_list) + random.choice(random_list) + random.choice(random_list)
+            for from_dir_path in from_dir_list:
+                from_dir_base = os.path.basename(from_dir_path)
+                shutil.copytree(from_dir_path, to_dir_path + '/' + from_dir_base)
+    else:
+        for sync_name in list(args.s):
+            for name, [from_dir_list, to_dir] in dict(mop_db['sync_dir_set']).items():
+                if name != sync_name:
+                    continue
+
+                to_dir_path = to_dir + random.choice(random_list) + random.choice(random_list) + random.choice(
+                    random_list) \
+                              + random.choice(random_list) + random.choice(random_list) + random.choice(random_list) \
+                              + random.choice(random_list) + random.choice(random_list) + random.choice(random_list) \
+                              + random.choice(random_list) + random.choice(random_list) + random.choice(random_list)
+
+                for from_dir_path in from_dir_list:
+                    from_dir_base = os.path.basename(from_dir_path)
+                    shutil.copytree(from_dir_path, to_dir_path + '/' + from_dir_base)
+
+    mop_db.close()
     print(successful)
+
+if args.dir:
+    mop_db = shelve.open(mop_db_path + 'mop')
+
+    sync_set_dict = dict(mop_db['sync_dir_set'])
+    for sync_name, sync_list in sync_set_dict.items():
+        print(sync_name + ') ' + str(sync_list[0]) + ' => ' + sync_list[1])
+
+    if args.dir[0] == 'n':
+        sync_name = input('Name: ')
+        if sync_name.lower() == 'all':
+            sys.exit()
+        from_dir = input('FromDir: ')
+        to_dir = input('ToDir: ')
+        from_dir_list = from_dir.split('&&')
+
+        t_dict = mop_db['sync_dir_set']
+        t_dict[sync_name] = [from_dir_list, to_dir]
+        mop_db['sync_dir_set'] = t_dict
+    elif args.dir[0] == 'l':
+        pass
+    elif args.dir[0] == 'd':
+        del_sync_name = input('DelName: ')
+
+        t_dict = mop_db['sync_dir_set']
+        del t_dict[del_sync_name]
+        mop_db['sync_dir_set'] = t_dict
+    elif args.dir[0] == 'e':
+        edit_sync_name = input('EditName: ')
+
+        if LANGUAGE == 'cn':
+            print('$代表原本即不做改动')
+        else:
+            print('$means that nothing has been changed')
+
+        t_dict = mop_db['sync_dir_set']
+        edit_list = t_dict[edit_sync_name]
+        t_list = []
+
+        edit_from_dir = input('EditFromDir: ')
+        if edit_from_dir == '$':
+            t_list.append(edit_list[0])
+        else:
+            t_list.append(edit_from_dir.split('&&'))
+
+        edit_to_dir = input('EditToDir: ')
+        if edit_from_dir == '$':
+            t_list.append(edit_list[1])
+        else:
+            t_list.append(edit_to_dir)
+
+        t_dict[edit_sync_name] = t_list
+
+        mop_db['sync_dir_set'] = t_dict
+
     mop_db.close()
