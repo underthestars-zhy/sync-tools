@@ -12,10 +12,8 @@ import os
 import random
 import shutil
 import datetime
-from typing import List
 
-random_list = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j',
-               'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']
+today = datetime.datetime
 
 # 多语言设置
 file_lists = os.listdir(os.path.expanduser('~'))
@@ -51,21 +49,25 @@ parser = argparse.ArgumentParser(description='SyncTool-MacOS-11')
 
 parser.add_argument('-s', type=str, help=sync_help, nargs='*')
 parser.add_argument('-dir', type=str, help=dir_help, nargs='*')
+parser.add_argument('-t', type=str, help=dir_help, nargs='*')
 
 args = parser.parse_args()
 
+if args.t:
+    if LANGUAGE == 'cn':
+        print('正在打包')
+    else:
+        print('Packing up')
+
 
 if args.s:
-    print(dir_text)
+    print(sync_text)
     mop_db = shelve.open(mop_db_path + 'mop')
     # TODO: 多线程
 
     if args.s[0] == 'all':
         for [from_dir_list, to_dir] in dict(mop_db['sync_dir_set']).values():
-            to_dir_path = to_dir + random.choice(random_list) + random.choice(random_list) + random.choice(random_list)\
-                          + random.choice(random_list) + random.choice(random_list) + random.choice(random_list)\
-                          + random.choice(random_list) + random.choice(random_list) + random.choice(random_list)\
-                          + random.choice(random_list) + random.choice(random_list) + random.choice(random_list)
+            to_dir_path = to_dir + str(today.now())
             for from_dir_path in from_dir_list:
                 from_dir_base = os.path.basename(from_dir_path)
                 shutil.copytree(from_dir_path, to_dir_path + '/' + from_dir_base)
@@ -75,11 +77,7 @@ if args.s:
                 if name != sync_name:
                     continue
 
-                to_dir_path = to_dir + random.choice(random_list) + random.choice(random_list) + random.choice(
-                    random_list) \
-                              + random.choice(random_list) + random.choice(random_list) + random.choice(random_list) \
-                              + random.choice(random_list) + random.choice(random_list) + random.choice(random_list) \
-                              + random.choice(random_list) + random.choice(random_list) + random.choice(random_list)
+                to_dir_path = to_dir + str(today.now())
 
                 for from_dir_path in from_dir_list:
                     from_dir_base = os.path.basename(from_dir_path)
