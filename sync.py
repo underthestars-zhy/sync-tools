@@ -131,7 +131,7 @@ if args.dir:
             t_list.append(edit_from_dir.split('&&'))
 
         edit_to_dir = input('EditToDir: ')
-        if edit_from_dir == '$':
+        if edit_to_dir == '$':
             t_list.append(edit_list[1])
         else:
             t_list.append(edit_to_dir)
