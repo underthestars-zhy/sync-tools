@@ -57,6 +57,7 @@ args = parser.parse_args()
 
 if args.s:
     print(dir_text)
+    mop_db = shelve.open(mop_db_path + 'mop')
     # TODO: 多线程
 
     if args.s[0] == 'all':
