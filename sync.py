@@ -9,7 +9,7 @@ import argparse
 import json
 import shelve
 import os
-import random
+import zipfile
 import shutil
 import datetime
 
@@ -55,10 +55,44 @@ args = parser.parse_args()
 
 if args.t:
     if LANGUAGE == 'cn':
-        print('正在打包')
+        print('正在打包备份...')
     else:
-        print('Packing up')
+        print('Packing up and sync...')
 
+    mop_db = shelve.open(mop_db_path + 'mop')
+
+    if args.t[0] == 'all':
+        for [from_dir_list, to_dir] in dict(mop_db['sync_dir_set']).values():
+            to_dir_path = to_dir + str(today.now())
+            os.makedirs(to_dir_path)
+            for from_dir_path in from_dir_list:
+                from_dir_base = os.path.basename(from_dir_path)
+
+                new_zip = zipfile.ZipFile(from_dir_base + '.zip', 'w')
+                new_zip.write(from_dir_path, compress_type=zipfile.ZIP_DEFLATED)
+                new_zip.close()
+
+                shutil.move(from_dir_base + '.zip', to_dir_path)
+    else:
+        for sync_name in list(args.t):
+            for name, [from_dir_list, to_dir] in dict(mop_db['sync_dir_set']).items():
+                if name != sync_name:
+                    continue
+
+                to_dir_path = to_dir + str(today.now())
+                os.makedirs(to_dir_path)
+
+                for from_dir_path in from_dir_list:
+                    from_dir_base = os.path.basename(from_dir_path)
+
+                    new_zip = zipfile.ZipFile(from_dir_base + '.zip', 'w')
+                    new_zip.write(from_dir_path, compress_type=zipfile.ZIP_DEFLATED)
+                    new_zip.close()
+
+                    shutil.move(from_dir_base + '.zip', to_dir_path)
+
+    mop_db.close()
+    print(successful)
 
 if args.s:
     print(sync_text)
